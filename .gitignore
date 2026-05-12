@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+uploads/*
+!uploads/.gitkeep
+generated/*
+!generated/.gitkeep
+*.log
+.env
+
+# Admin runtime data (uploads + instructions persistées)
+knowledge_base/admin/*/*
+!knowledge_base/admin/*/.gitkeep
+knowledge_base/admin/instructions.txt
+knowledge_base/admin/api_keys.json
+
+# Local Flask secret + admin settings (per-deployment)
+.flask_secret
+knowledge_base/admin/settings.json

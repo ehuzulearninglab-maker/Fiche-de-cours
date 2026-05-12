@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion administrateur — Générateur de Fiches Pédagogiques</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Espace administrateur</h1>
+            <p class="subtitle">Générateur de Fiches Pédagogiques — Bénin</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="login-section">
+            <h2>Connexion</h2>
+            <p class="login-hint">
+                L'espace administrateur permet de gérer la base de connaissances,
+                les clés API et les fournisseurs de modèles. Saisissez le mot de
+                passe défini par le déploiement.
+            </p>
+            {% if error %}
+            <div class="login-error">Mot de passe incorrect.</div>
+            {% endif %}
+            <form method="POST" action="/admin/login" class="login-form" autocomplete="off">
+                <input type="hidden" name="next" value="{{ next_url }}">
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" name="password" autofocus required>
+                </div>
+                <button type="submit" class="btn-generate">Se connecter</button>
+            </form>
+            <p class="login-back"><a href="/">← Retour au formulaire</a></p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Générateur de Fiches Pédagogiques — Conforme au système éducatif béninois</p>
+    </footer>
+</body>
+</html>

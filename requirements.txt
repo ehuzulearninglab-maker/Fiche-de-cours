@@ -1,0 +1,8 @@
+flask
+python-docx
+reportlab
+pymupdf
+requests
+gunicorn
+supabase>=2.0,<3.0
+psycopg2-binary

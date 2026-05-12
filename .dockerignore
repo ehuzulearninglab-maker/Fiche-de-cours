@@ -1,0 +1,9 @@
+.git
+__pycache__
+*.pyc
+uploads/*
+generated/*
+!uploads/.gitkeep
+!generated/.gitkeep
+.venv
+.env

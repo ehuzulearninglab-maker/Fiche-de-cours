@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire — Fiche de Cour</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="app-body">
+    <header class="app-header">
+        <div class="app-header-inner">
+            <a class="landing-logo" href="/">
+                <span class="landing-logo-text">Fiche de Cour</span>
+            </a>
+            <div class="app-header-actions">
+                <a href="/" class="btn-ghost">← Tableau de bord</a>
+                {% if is_admin %}
+                    <a href="/admin" class="btn-admin">Espace admin</a>
+                {% endif %}
+                <span class="header-email">{{ current_user.email }}</span>
+                <form method="POST" action="/logout" class="logout-form">
+                    <button type="submit" class="btn-ghost">Se déconnecter</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <section class="form-intro">
+            <h1>Formulaire de génération</h1>
+            <p class="form-intro-subtitle">
+                {% if preselected_classe %}
+                    Assistant <strong>{{ preselected_classe }}</strong> sélectionné. Tous les champs marqués
+                    <span class="required-mark">*</span> sont obligatoires.
+                {% else %}
+                    Renseignez les paramètres ci-dessous. Tous les champs marqués
+                    <span class="required-mark">*</span> sont obligatoires.
+                {% endif %}
+            </p>
+        </section>
+
+        <form id="ficheForm" enctype="multipart/form-data">
+            {% if is_admin %}
+            <!-- Configuration API (admin uniquement) -->
+            <section class="form-section">
+                <h2>Configuration API <span class="field-hint">(visible uniquement en mode admin)</span></h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="provider">Fournisseur IA</label>
+                        <select id="provider" name="provider">
+                            <option value="">— Utiliser le défaut serveur —</option>
+                            <option value="openai">OpenAI (GPT-4o)</option>
+                            <option value="claude">Claude (Anthropic)</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="groq">Groq</option>
+                            <option value="openrouter">OpenRouter</option>
+                            <option value="cerebras">Cerebras</option>
+                            <option value="glm">GLM (Zhipu AI)</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-2" id="api_key_group">
+                        <label for="api_key">Clé API <span id="api_key_optional_hint" class="api-key-hint" style="display:none;">(facultatif — clé serveur configurée)</span></label>
+                        <input type="password" id="api_key" name="api_key" placeholder="Entrez votre clé API…">
+                    </div>
+                    <div class="form-group">
+                        <label for="model_override">Modèle (optionnel)</label>
+                        <input type="text" id="model_override" name="model_override" placeholder="Modèle par défaut">
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Paramètres de la fiche -->
+            <section class="form-section">
+                <h2>Paramètres de la fiche</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="matiere">Matière <span class="required-mark" aria-hidden="true">*</span></label>
+                        <select id="matiere" name="matiere" required>
+                            <option value="EST">EST</option>
+                            <option value="Mathématiques">Mathématiques</option>
+                            <option value="Français">Français</option>
+                            <option value="ES">ES (Éducation sociale)</option>
+                            <option value="EPS">EPS</option>
+                            <option value="Activités artistiques">Activités artistiques</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="sous_matiere_group" style="display:none;">
+                        <label for="sous_matiere">Sous-matière</label>
+                        <select id="sous_matiere" name="sous_matiere">
+                            <option value="">— Aucune —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="niveau">Niveau <span class="required-mark" aria-hidden="true">*</span></label>
+                        <select id="niveau" name="niveau" required>
+                            <option value="CI" {% if preselected_classe == 'CI' %}selected{% endif %}>CI</option>
+                            <option value="CP" {% if preselected_classe == 'CP' %}selected{% endif %}>CP</option>
+                            <option value="CE1" {% if preselected_classe == 'CE1' %}selected{% endif %}>CE1</option>
+                            <option value="CE2" {% if preselected_classe == 'CE2' %}selected{% endif %}>CE2</option>
+                            <option value="CM1" {% if preselected_classe == 'CM1' %}selected{% endif %}>CM1</option>
+                            <option value="CM2" {% if not preselected_classe or preselected_classe == 'CM2' %}selected{% endif %}>CM2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sa">SA N° <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input type="text" id="sa" name="sa" placeholder="Ex: 1, 2, 3..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sequence">Séquence <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input type="text" id="sequence" name="sequence" placeholder="Ex: 0, 1, 2..." required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label for="titre_sa">Titre de la SA <span class="required-mark" aria-hidden="true">*</span></label>
+                        <input type="text" id="titre_sa" name="titre_sa" placeholder="Ex: Les fractions, Le cycle de l'eau, La phrase interrogative..." required>
+                    </div>
+                    <div class="form-group flex-2">
+                        <label for="titre_sequence">Titre / objectif de la séquence <span class="field-hint">(facultatif mais recommandé)</span></label>
+                        <input type="text" id="titre_sequence" name="titre_sequence" placeholder="Ex: Additionner deux fractions de même dénominateur...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="type_fiche">Type de fiche</label>
+                        <select id="type_fiche" name="type_fiche">
+                            <option value="Séquence normale">Séquence normale</option>
+                            <option value="Exploitation de la situation de départ">Exploitation de la situation de départ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="duree">Durée prévue <span class="field-hint">(facultatif)</span></label>
+                        <input type="text" id="duree" name="duree" placeholder="Ex: 30 min, 45 min, 1h...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label for="objectifs">Objectifs spécifiques de la leçon <span class="field-hint">(facultatif)</span></label>
+                        <textarea id="objectifs" name="objectifs" rows="3"
+                            placeholder="Ex: À l'issue de la leçon, l'élève sera capable de…&#10;- identifier…&#10;- utiliser…"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Instructions -->
+            <section class="form-section">
+                <h2>Instructions métier <span class="field-hint">(facultatif)</span></h2>
+                <div class="form-group">
+                    <textarea id="instructions" name="instructions" rows="4"
+                        placeholder="Instructions spécifiques pour la génération de la fiche...&#10;Ex: Insister sur la phase d'expérimentation, ajouter des exercices pratiques..."></textarea>
+                </div>
+            </section>
+
+            <!-- Generate button -->
+            <div class="form-actions">
+                <button type="submit" id="generateBtn" class="btn-generate">
+                    <span class="btn-text">Générer la fiche</span>
+                    <span class="btn-loading" style="display:none;">
+                        <span class="spinner"></span> Génération en cours...
+                    </span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Results -->
+        <section id="results" class="results-section" style="display:none;">
+            <div class="results-header">
+                <h2>Fiche générée</h2>
+                <div class="result-tabs">
+                    <button type="button" class="result-tab active" data-tab="preview">Aperçu</button>
+                    <button type="button" class="result-tab" data-tab="edit">Modifier</button>
+                </div>
+                <div class="download-buttons">
+                    <a id="downloadMd" class="btn-download btn-md" style="display:none;">Télécharger Markdown</a>
+                    <a id="downloadDocx" class="btn-download btn-docx" style="display:none;">Télécharger Word (.docx)</a>
+                    <a id="downloadPdf" class="btn-download btn-pdf" style="display:none;">Télécharger PDF</a>
+                </div>
+            </div>
+            <div id="fichePreview" class="fiche-preview"></div>
+            <div id="ficheEdit" class="fiche-edit" style="display:none;">
+                <textarea id="ficheEditTextarea" rows="25"></textarea>
+                <div class="edit-actions">
+                    <button type="button" id="regenerateBtn" class="btn-regenerate">
+                        <span class="btn-text">Régénérer Word/PDF depuis l'édition</span>
+                        <span class="btn-loading" style="display:none;"><span class="spinner"></span> En cours…</span>
+                    </button>
+                    <span id="regenerateStatus" class="admin-status"></span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Fiche de Cour — Conforme au système éducatif béninois.</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

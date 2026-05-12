@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assistant.name }} — Fiche de Cour</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="chat-body">
+
+<div class="chat-app">
+
+    <!-- Backdrop pour la sidebar mobile -->
+    <div class="chat-sidebar-backdrop" id="chatSidebarBackdrop"></div>
+
+    <!-- Sidebar : conversations -->
+    <aside class="chat-sidebar">
+        <div class="chat-sidebar-head">
+            <a class="landing-logo" href="/" title="Tableau de bord">
+                <span class="landing-logo-text">Fiche de Cour</span>
+            </a>
+        </div>
+
+        <div class="chat-sidebar-actions">
+            <button type="button" id="chatNewBtn" class="btn-primary btn-block">+ Nouvelle conversation</button>
+        </div>
+
+        <div class="chat-sidebar-section">
+            <h4>Mes conversations</h4>
+            <ul id="chatConvList" class="chat-conv-list">
+                <li class="chat-conv-empty">Chargement…</li>
+            </ul>
+        </div>
+
+        <div class="chat-sidebar-foot">
+            <a href="/" class="btn-ghost btn-block">← Tableau de bord</a>
+            <a href="/formulaire?classe={{ assistant.classe }}" class="btn-ghost btn-block">Mode formulaire</a>
+            {% if is_admin %}
+            <a href="/admin" class="btn-admin btn-block">Espace admin</a>
+            {% endif %}
+            <form method="POST" action="/logout" class="logout-form">
+                <button type="submit" class="btn-ghost btn-block">Se déconnecter</button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main : conversation -->
+    <main class="chat-main">
+        <header class="chat-header">
+            <div style="display:flex; align-items:flex-start; gap:0.6rem;">
+                <button type="button" class="chat-sidebar-toggle" id="chatSidebarToggle" aria-label="Ouvrir le menu">☰</button>
+                <div>
+                    <span class="chat-classe-badge">{{ assistant.classe }}</span>
+                    <strong class="chat-assistant-name">{{ assistant.name }}</strong>
+                    <p class="chat-assistant-desc">{{ assistant.description or '' }}</p>
+                </div>
+            </div>
+            <div class="chat-header-user">
+                <span class="header-email">{{ current_user.email }}</span>
+            </div>
+        </header>
+
+        <section id="chatMessages" class="chat-messages">
+            <div class="chat-welcome">
+                <h2>Bonjour {{ current_user.full_name or '' }}</h2>
+                <p>
+                    Je suis le <strong>{{ assistant.name }}</strong>. Demande-moi
+                    de générer une fiche pour une SA de {{ assistant.classe }}, je te
+                    poserai les bonnes questions et je te livrerai la fiche directement
+                    en Word et PDF.
+                </p>
+                <div class="chat-suggestions">
+                    <button type="button" class="chat-suggestion">Génère une fiche de mathématiques</button>
+                    <button type="button" class="chat-suggestion">SA 2 — séquence 1 — Les fractions simples</button>
+                    <button type="button" class="chat-suggestion">Que peux-tu faire pour moi ?</button>
+                </div>
+            </div>
+        </section>
+
+        <footer class="chat-input-bar">
+            <form id="chatForm" class="chat-form">
+                <div class="chat-form-pill">
+                    <textarea id="chatInput"
+                              placeholder="Écris ton message…"
+                              rows="1"
+                              required></textarea>
+                    <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Envoyer">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                             stroke="currentColor" stroke-width="2.4"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 12h14"></path>
+                            <path d="M13 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+            <p class="chat-help">
+                Entrée pour envoyer · Maj+Entrée pour aller à la ligne
+            </p>
+        </footer>
+    </main>
+</div>
+
+<!-- Modal plein écran : éditeur de fiche -->
+<div id="ficheEditorModal" class="fiche-modal" aria-hidden="true" role="dialog" aria-labelledby="ficheEditorTitle">
+    <div class="fiche-modal-backdrop" data-close></div>
+    <div class="fiche-modal-panel">
+        <header class="fiche-modal-head">
+            <h2 id="ficheEditorTitle">Modifier la fiche</h2>
+            <button type="button" class="fiche-modal-close" data-close aria-label="Fermer">×</button>
+        </header>
+        <div class="fiche-modal-body">
+            <textarea id="ficheEditorTextarea" class="fiche-editor-textarea" spellcheck="false"></textarea>
+        </div>
+        <footer class="fiche-modal-foot">
+            <span id="ficheEditorStatus" class="fiche-modal-status" aria-live="polite"></span>
+            <div class="fiche-modal-actions">
+                <button type="button" class="btn-ghost" data-close>Annuler</button>
+                <button type="button" id="ficheEditorRegen" class="btn-primary">Régénérer Word et PDF</button>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    window.CHAT_CTX = {
+        assistant: {{ assistant | tojson }},
+        conversationId: {{ conversation_id | tojson }},
+    };
+</script>
+<script src="/static/chat.js"></script>
+</body>
+</html>
