@@ -19,7 +19,7 @@ Upload a PDF resume and instantly receive a beautiful, professional portfolio we
 
 - **Framework**: Next.js 16 (App Router, TypeScript)
 - **Styling**: Tailwind CSS 4 + Framer Motion
-- **AI**: OpenAI API (GPT-4o-mini)
+- **AI**: Google Gemini API (Gemini 2.0 Flash)
 - **PDF Parsing**: pdf-parse
 - **Database**: SQLite via Prisma 7 + better-sqlite3
 - **Deployment**: Render.com ready
@@ -29,7 +29,7 @@ Upload a PDF resume and instantly receive a beautiful, professional portfolio we
 ### Prerequisites
 
 - Node.js 22+
-- An OpenAI API key
+- A Google Gemini API key
 
 ### Installation
 
@@ -51,7 +51,7 @@ Edit `.env`:
 
 ```
 DATABASE_URL="file:./dev.db"
-OPENAI_API_KEY="sk-your-openai-api-key"
+GEMINI_API_KEY="your-gemini-api-key"
 ADMIN_TOKEN="your-secret-admin-token"
 ```
 
@@ -96,7 +96,7 @@ Open [http://localhost:3000](http://localhost:3000).
 2. Create a new Web Service on [Render](https://render.com)
 3. Connect your GitHub repository
 4. Set environment variables:
-   - `OPENAI_API_KEY` — Your OpenAI API key
+   - `GEMINI_API_KEY` — Your Google Gemini API key
    - `ADMIN_TOKEN` — Secret token for admin access
    - `DATABASE_URL` — `file:./prisma/dev.db`
 5. Build command: `npm ci && npx prisma generate && npx prisma migrate deploy && npm run build`
@@ -120,7 +120,7 @@ src/
 │       └── PortfolioView.tsx  # Portfolio renderer
 └── lib/
     ├── db.ts                 # Prisma client
-    ├── openai.ts             # OpenAI integration
+    ├── openai.ts             # Gemini AI integration
     ├── pdf.ts                # PDF text extraction
     └── types.ts              # TypeScript interfaces
 prisma/

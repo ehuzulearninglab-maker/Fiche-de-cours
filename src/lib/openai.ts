@@ -1,21 +1,15 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { PortfolioData } from "./types";
 
-function getClient(): OpenAI {
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+function getClient(): GoogleGenerativeAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is required");
+  }
+  return new GoogleGenerativeAI(apiKey);
 }
 
-export async function analyzeCV(cvText: string): Promise<PortfolioData> {
-  const openai = getClient();
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: `You are a professional CV analyzer and portfolio content creator. 
+const systemPrompt = `You are a professional CV analyzer and portfolio content creator. 
 Extract information from the CV text and generate a premium portfolio structure.
 Improve the biography to sound professional and engaging.
 Enhance project descriptions to be attractive.
@@ -47,20 +41,22 @@ Return ONLY valid JSON with this exact structure:
 For skills level, estimate a number between 60-95.
 For theme colors, generate a modern, elegant dark theme with a distinctive accent color based on the person's field.
 Make sure the bio is compelling and the content is well-structured.
-If information is missing, infer reasonable defaults.`,
-      },
-      {
-        role: "user",
-        content: `Analyze this CV and generate portfolio content:\n\n${cvText}`,
-      },
-    ],
-    temperature: 0.7,
-    max_tokens: 4000,
+If information is missing, infer reasonable defaults.`;
+
+export async function analyzeCV(cvText: string): Promise<PortfolioData> {
+  const genAI = getClient();
+  const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    systemInstruction: systemPrompt,
   });
 
-  const content = response.choices[0]?.message?.content;
+  const result = await model.generateContent(
+    `Analyze this CV and generate portfolio content:\n\n${cvText}`
+  );
+
+  const content = result.response.text();
   if (!content) {
-    throw new Error("No response from OpenAI");
+    throw new Error("No response from Gemini");
   }
 
   const jsonMatch = content.match(/\{[\s\S]*\}/);
