@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Portfolio {
+  id          String   @id @default(uuid())
+  fullName    String
+  title       String
+  bio         String
+  skills      String
+  education   String
+  experience  String
+  projects    String
+  languages   String
+  contact     String
+  certifications String @default("[]")
+  theme       String
+  revoked     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

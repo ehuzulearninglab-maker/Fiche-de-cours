@@ -1,25 +1,37 @@
-FROM python:3.11-slim
+FROM node:22-slim AS base
 
-# Dépendances système : libreoffice pour la conversion PDF, fonts pour les accents
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        libreoffice-writer-nogui \
-        fonts-dejavu \
-        curl \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci
 
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ENV PORT=8080 \
-    PYTHONUNBUFFERED=1
+RUN npx prisma generate
+RUN npm run build
 
-EXPOSE 8080
+FROM base AS runner
+ENV NODE_ENV=production
 
-# gunicorn pour servir Flask en production
-# Timeout 600s pour absorber les gros uploads (jusqu'à 200 Mo) +
-# extraction PyMuPDF qui peut prendre plusieurs minutes.
-CMD gunicorn --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 600 app:app
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/src/generated ./src/generated
+
+USER nextjs
+
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

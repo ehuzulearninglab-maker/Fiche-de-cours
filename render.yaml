@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cv2portfolio-ai
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        value: "file:./prisma/dev.db"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: NODE_ENV
+        value: production

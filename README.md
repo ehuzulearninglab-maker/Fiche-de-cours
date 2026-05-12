@@ -1,93 +1,133 @@
-# Générateur de Fiches Pédagogiques - Bénin
+# CV2Portfolio AI
 
-Générateur intelligent de fiches pédagogiques conformes au système éducatif béninois (CI au CM2).
+> Transform your CV into a premium portfolio website in seconds, powered by AI.
 
-## Fonctionnalités
+Upload a PDF resume and instantly receive a beautiful, professional portfolio website with an elegant biography, extracted skills, project showcases, career timeline, and a modern dark UI theme.
 
-- Génération de fiches pédagogiques respectant le canevas officiel béninois
-- Support multi-provider IA : OpenAI, Claude, Gemini, Groq, OpenRouter, Cerebras, GLM
-- **Sous-matières** : ex. Français → Conjugaison, Orthographe, Lecture, Vocabulaire thématique, Communication orale… (voir `matieres.py`)
-- **Mode édition** : modifier la fiche générée et régénérer les .docx / .pdf
-- **Espace administration** (`?admin=<token>`) :
-  - Documents internes catégorisés (canevas, fiches de référence, mesures correctives, règles par niveau, règles par matière) injectés au prompt
-  - Instructions système permanentes (prompt admin)
-- Base de connaissances pré-chargée (19 documents, 332 pages)
-- Upload de documents PDF (principal + complémentaires)
-- Export Markdown / Word (.docx) / PDF
-- Dockerfile + fly.toml prêts pour un déploiement (voir [DEPLOY.md](DEPLOY.md))
+## Features
 
-## Installation
+- **AI-Powered CV Analysis** — Extracts name, title, bio, skills, education, experience, projects, languages, certifications, and contact info
+- **Professional Content Enhancement** — AI rewrites bios, improves descriptions, and generates compelling summaries
+- **Premium Design** — Dark mode, glassmorphism, gradients, smooth Framer Motion animations
+- **Auto Theme Generation** — Unique color palette generated based on the user's professional field
+- **Public Share Link** — Each portfolio gets a unique URL at `/p/[id]`
+- **HTML Download** — Download your complete portfolio as a standalone HTML file
+- **Admin Dashboard** — View all generated portfolios, revoke access (protected by token)
+- **Responsive** — Looks great on desktop, tablet, and mobile
 
-```bash
-pip install flask python-docx reportlab pymupdf requests
-```
+## Tech Stack
 
-Pour la conversion PDF, installer LibreOffice :
-```bash
-sudo apt-get install libreoffice-writer-nogui
-```
+- **Framework**: Next.js 16 (App Router, TypeScript)
+- **Styling**: Tailwind CSS 4 + Framer Motion
+- **AI**: OpenAI API (GPT-4o-mini)
+- **PDF Parsing**: pdf-parse
+- **Database**: SQLite via Prisma 7 + better-sqlite3
+- **Deployment**: Render.com ready
 
-## Lancement
+## Quick Start
 
-```bash
-python app.py
-```
+### Prerequisites
 
-L'application sera accessible sur `http://localhost:3000`.
+- Node.js 22+
+- An OpenAI API key
 
-### Comptes utilisateur (Supabase Auth)
-
-L'authentification s'appuie désormais sur **Supabase Auth**. Configure ces variables d'environnement :
+### Installation
 
 ```bash
-export SUPABASE_URL="https://<projet>.supabase.co"
-export SUPABASE_ANON_KEY="..."          # clé publique
-export SUPABASE_SERVICE_ROLE_KEY="..."  # clé serveur (secret)
-export SUPABASE_DB_URL="postgresql://..."  # facultatif, pour les migrations
+git clone https://github.com/ehuzulearninglab-maker/cv2portfolio-ai.git
+cd cv2portfolio-ai
+npm install
 ```
 
-Applique le schéma initial (idempotent) :
+### Configuration
+
+Copy the example env file and add your keys:
 
 ```bash
-psql "$SUPABASE_DB_URL" -f migrations/001_initial_schema.sql
+cp .env.example .env
 ```
 
-Démarre l'app, puis :
-
-1. Crée un compte via **`/signup`** (email + mot de passe)
-2. Promeus ce compte au rang d'admin :
-
-   ```bash
-   python scripts/promote_admin.py mon-email@example.com
-   ```
-
-   Tu peux aussi définir `ADMIN_BOOTSTRAP_EMAIL=mon-email@example.com` au démarrage : le profil sera promu automatiquement au prochain boot.
-
-3. Reconnecte-toi via **`/login`**. Les onglets « Espace Administration » s'affichent quand `is_admin = true`.
-
-## Utilisation
-
-1. Choisir le fournisseur IA et entrer la clé API
-2. Renseigner les paramètres (matière, niveau, SA, séquence, type de fiche)
-3. Uploader un PDF principal et/ou des documents complémentaires
-4. Ajouter des instructions métier si nécessaire
-5. Cliquer "Générer la fiche"
-6. Télécharger en Word ou PDF
-
-## Structure
+Edit `.env`:
 
 ```
-├── app.py                  # Application Flask principale
-├── llm_providers.py        # Abstraction multi-provider IA
-├── pdf_processor.py        # Extraction de texte PDF
-├── knowledge_base.py       # Recherche dans la base de connaissances
-├── document_generator.py   # Génération Word/PDF
-├── templates/
-│   └── index.html          # Interface web
-├── static/
-│   ├── style.css           # Styles
-│   └── app.js              # JavaScript frontend
-├── knowledge_base/         # Base de connaissances pré-extraite
-├── uploads/                # Documents uploadés
-└── generated/              # Fiches générées
+DATABASE_URL="file:./dev.db"
+OPENAI_API_KEY="sk-your-openai-api-key"
+ADMIN_TOKEN="your-secret-admin-token"
 ```
+
+### Database Setup
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+### Run
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## Pages
+
+| Route | Description |
+|---|---|
+| `/` | Landing page with features, steps, testimonials |
+| `/upload` | Drag & drop CV upload with animated experience |
+| `/portfolio/[id]` | Generated portfolio with controls (share, download) |
+| `/p/[id]` | Public shareable portfolio page |
+| `/admin` | Admin dashboard (requires ADMIN_TOKEN) |
+
+## API Routes
+
+| Method | Route | Description |
+|---|---|---|
+| POST | `/api/upload` | Upload and parse PDF |
+| POST | `/api/generate` | Generate portfolio via AI |
+| GET | `/api/download/[id]` | Download portfolio as HTML |
+| GET | `/api/portfolios` | List all portfolios (admin) |
+| POST | `/api/portfolios/[id]/revoke` | Revoke/restore portfolio (admin) |
+
+## Deploy to Render
+
+1. Push code to GitHub
+2. Create a new Web Service on [Render](https://render.com)
+3. Connect your GitHub repository
+4. Set environment variables:
+   - `OPENAI_API_KEY` — Your OpenAI API key
+   - `ADMIN_TOKEN` — Secret token for admin access
+   - `DATABASE_URL` — `file:./prisma/dev.db`
+5. Build command: `npm ci && npx prisma generate && npx prisma migrate deploy && npm run build`
+6. Start command: `npm start`
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── page.tsx              # Landing page
+│   ├── layout.tsx            # Root layout
+│   ├── globals.css           # Global styles + animations
+│   ├── upload/page.tsx       # Upload page
+│   ├── portfolio/[id]/       # Portfolio result page
+│   ├── p/[id]/               # Public share page
+│   ├── admin/page.tsx        # Admin dashboard
+│   └── api/                  # API routes
+├── components/
+│   └── portfolio/
+│       └── PortfolioView.tsx  # Portfolio renderer
+└── lib/
+    ├── db.ts                 # Prisma client
+    ├── openai.ts             # OpenAI integration
+    ├── pdf.ts                # PDF text extraction
+    └── types.ts              # TypeScript interfaces
+prisma/
+├── schema.prisma             # Database schema
+└── migrations/               # Migration files
+```
+
+## Created by
+
+**Michel Affedjou** — Responsable de Projet Innovant — [Ehuzu Learning Lab](https://github.com/ehuzulearninglab-maker)
