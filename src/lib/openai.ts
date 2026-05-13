@@ -47,7 +47,7 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;
+const MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash"] as const;
 
 export async function analyzeCV(cvText: string): Promise<PortfolioData> {
   const genAI = getClient();
