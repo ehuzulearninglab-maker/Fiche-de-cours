@@ -47,42 +47,51 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const MODELS = ["gemini-2.0-flash", "gemini-1.5-flash"] as const;
+
 export async function analyzeCV(cvText: string): Promise<PortfolioData> {
   const genAI = getClient();
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
-    systemInstruction: systemPrompt,
-  });
-
-  const maxRetries = 4;
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const result = await model.generateContent(
-        `Analyze this CV and generate portfolio content:\n\n${cvText}`
-      );
+  for (const modelName of MODELS) {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: systemPrompt,
+    });
 
-      const content = result.response.text();
-      if (!content) {
-        throw new Error("No response from Gemini");
-      }
+    const maxRetries = 3;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        console.log(`Trying ${modelName} (attempt ${attempt + 1}/${maxRetries})`);
+        const result = await model.generateContent(
+          `Analyze this CV and generate portfolio content:\n\n${cvText}`
+        );
 
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error("Could not parse JSON from response");
-      }
+        const content = result.response.text();
+        if (!content) {
+          throw new Error("No response from Gemini");
+        }
 
-      return JSON.parse(jsonMatch[0]) as PortfolioData;
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      const is429 = lastError.message.includes("429") || lastError.message.includes("Too Many Requests");
-      if (!is429 || attempt === maxRetries - 1) {
-        throw lastError;
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("Could not parse JSON from response");
+        }
+
+        return JSON.parse(jsonMatch[0]) as PortfolioData;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        const is429 = lastError.message.includes("429") || lastError.message.includes("Too Many Requests");
+        if (!is429) {
+          throw lastError;
+        }
+        if (attempt < maxRetries - 1) {
+          const delay = Math.pow(2, attempt + 1) * 5000;
+          console.log(`Rate limit on ${modelName}, retrying in ${delay / 1000}s`);
+          await sleep(delay);
+        } else {
+          console.log(`Rate limit exhausted on ${modelName}, trying next model...`);
+        }
       }
-      const delay = Math.pow(2, attempt + 1) * 5000;
-      console.log(`Gemini rate limit hit, retrying in ${delay / 1000}s (attempt ${attempt + 1}/${maxRetries})`);
-      await sleep(delay);
     }
   }
 
